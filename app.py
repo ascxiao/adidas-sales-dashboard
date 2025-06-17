@@ -100,7 +100,41 @@ with dwn3:
                        file_name = "Sales_by_UnitsSold.csv", mime="text/csv")
 st.divider()
 
-_, col7 = st.columns =([0.1, 1])
-treemap = df[['Region', 'City', 'TotalSales']].hroupby(by = ['Region', 'City'])['TotalSales']
+_, col7 = st.columns([0.1, 1])
+treemap = df[['Region', 'City', 'TotalSales']].groupby(by = ['Region', 'City'])['TotalSales'].sum().reset_index()
+def format_sales(value):
+    if value >= 0:
+        return '{:.2f} Lakh'.format(value /1_000_000)
 
-fig4 = px.treemap(treemap, path = ['Region',])
+treemap["TotalsSales (Formatted)"] = treemap["TotalSales"].apply(format_sales)
+fig4 = px.treemap(treemap, path = ['Region','City'], values = "TotalSales",
+                  hover_name = "TotalsSales (Formatted)",
+                  hover_data = ["TotalsSales (Formatted)"],
+                  color = 'City', height = 700, width = 600)
+fig4.update_traces(textinfo="label+value")
+
+with col7:
+    st.subheader(":point_right: Total Sales by Region and City in Treemap")
+    st.plotly_chart(fig4, use_container_width = True)
+
+_, view4, dwn4 = st.columns([0.5,0.45,0.45])
+with view4:
+    result2 = df[['Region', 'City', 'TotalSales']].groupby(["Region", "City"])['TotalSales'].sum()
+    expander = st.expander("Total Sales by Region and City")
+    expander.write(result2)
+
+with dwn4:
+    st.download_button('Get Data', data = result2.to_csv().encode('utf-8'),
+                       file_name = 'Total Sales by Region.csv', mime='text/csv')
+
+_,view5, dwn5 = st.columns([0.5, 0.45, 0.45])
+
+with view5:
+    expander = st.expander("View Raw Data")
+    expander.write(df)
+
+with dwn5:
+    st.download_button('Download Raw Data', data = df.to_csv().encode('utf-8'),
+                       file_name = 'Adidas_Sales.csv', mime = 'text/csv')
+    
+st.divider()
